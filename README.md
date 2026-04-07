@@ -3,8 +3,6 @@
 
 A macro placement engine built for the **Partcl x Hudson River Trading Macro Placement Challenge 2026**.
 
-I am an IT student at The American College of Greece with a background in machine learning. I came across this competition and thought it was a great opportunity to apply graph-based ML techniques to a real chip design problem — an area I had no prior experience in before this project.
-
 ---
 
 ## What It Does
@@ -15,7 +13,7 @@ The placer positions hard macros on a chip floorplan to minimise the proxy cost:
 Proxy Cost = 1.0 × Wirelength + 0.5 × Density + 0.5 × Congestion
 ```
 
-It runs on all 17 IBM ICCAD04 benchmarks and produces zero-overlap placements within the 1-hour runtime limit.
+It runs on all 17 IBM ICCAD04 benchmarks and produces placements with 0 overlaps within the 1-hour runtime limit.
 
 ---
 
@@ -25,24 +23,23 @@ The approach combines two techniques: spectral graph initialisation and simulate
 
 **1. Spectral Graph Initialisation**
 
-Instead of starting from a random or greedy layout, I extract the circuit's connectivity graph from `plc.nets` and compute the graph Laplacian. The Fiedler vector (second eigenvector) and the next eigenvector encode the graph's structure and are used to assign macros initial positions that respect connectivity — highly connected macros start closer together. This gives simulated annealing a much better starting point.
-
-For small benchmarks (≤700 macros) I use `scipy.linalg.eigh`. For larger ones I use sparse eigendecomposition via `scipy.sparse.linalg.eigsh`.
+Instead of starting from a random or greedy layout, I extract the circuit's connectivity graph from `plc.nets` and compute the graph Laplacian. The Fiedler vector (second eigenvector) and the next eigenvector encode the graph's structure and are used to assign macros initial positions that respect connectivity - highly connected macros start closer together. This gives simulated annealing a much better starting point.
 
 **2. Simulated Annealing**
 
-After spectral initialisation, SA optimises the placement using three move types:
-- **SHIFT** — moves a single macro to a nearby position, scaled by current temperature
-- **SWAP** — exchanges two macros, with 70% probability of targeting a connected neighbour
-- **ATTRACT** — nudges a macro toward a connected neighbour by a small fraction
+After spectral initialization, I used Simulated Annealing (SA) to improve the placement. The algorithm applies three types of moves:
+- **SHIFT** - moves a single macro to a nearby position, scaled by current temperature
+- **SWAP** - swaps two macros with 70% chance of targeting a connected neighbour
+- **ATTRACT** - slightly moves a macro closer to one of its connected neighbours
 
 Moves are accepted or rejected using the standard Metropolis criterion. Temperature decays exponentially from `T_start = canvas × 0.15` to `T_end = canvas × 0.001` over a configurable time budget.
 
 **3. Legalisation**
 
-After SA, a two-stage legalisation pass resolves any residual overlaps:
-- **Spiral search** — places each macro (largest-first) by searching outward in a spiral from its current position until a legal non-overlapping location is found
-- **Force-based push-apart** — fallback when the spiral gets stuck; treats overlapping macros as repelling objects and applies iterative displacement forces
+After SA, a two-stage legalisation pass removes any remaining overlaps:
+
+*Spiral search* - greedily places macros (largest first) by searching outward for the nearest valid position
+*Push-apart fallback* - a simple method inspired by physics that resolves remaining overlaps by treating macros as repelling objects
 
 ---
 
@@ -104,11 +101,7 @@ uv run evaluate submissions/ml_sa_placer.py --all
 
 ## Dependencies
 
-- Python 3.10+
-- NumPy
-- SciPy
-- PyTorch
-- TILOS MacroPlacement evaluator (via competition submodule)
+- Python 3.10+, NumPy, SciPy, PyTorch, TILOS MacroPlacement evaluator (via competition submodule)
 
 ---
 
@@ -116,24 +109,22 @@ uv run evaluate submissions/ml_sa_placer.py --all
 
 ```
 ml_sa_placer.py
-├── Section 1 — PlacementCost loader (_load_plc)
-├── Section 2 — Edge extraction from plc.nets
-├── Section 3 — Spectral initialisation
-├── Section 4 — Legalisation (spiral search + push-apart)
-├── Section 5 — Simulated annealing (SHIFT / SWAP / ATTRACT)
-└── Section 6 — Placer class (public entry point)
+├── Section 1 - PlacementCost loader (_load_plc)
+├── Section 2 - Edge extraction from plc.nets
+├── Section 3 - Spectral initialisation
+├── Section 4 - Legalisation (spiral search + push-apart)
+├── Section 5 - Simulated annealing (SHIFT / SWAP / ATTRACT)
+└── Section 6 - Placer class (public entry point)
 ```
 
 ---
 
 ## Notes
 
-This was my first time working on an Electronic Design Automation problem. I had no prior knowledge of macro placement or chip design before this competition - most of what I learned came from reading the competition README, the referenced papers, and a lot of trial and error. The spectral initialisation idea came from reading about graph partitioning and thinking it could give SA a better starting point than random placement. It turned out to work well on most benchmarks.
+This was my first time working on an Electronic Design Automation problem. I had no prior knowledge of macro placement or chip design before this competition. The spectral initialisation idea came from reading about graph partitioning and thinking it could give SA a better starting point than random placement, which happened to be true in most cases.
 
 ---
 
 ## Author
 
-**Apostolos Kakarantzas**
-IT Student — The American College of Greece
-Partcl x HRT Macro Placement Challenge 2026
+**[Apostolos Kakarantzas](https://www.linkedin.com/in/akakarantzas/)**
