@@ -1,7 +1,7 @@
 [README.md](https://github.com/user-attachments/files/26523647/README.md)
-# ML-SA Macro Placer - Partcl x Hudson River Trading Macro Placement Challenge 2026
+# Spectral-SA Macro Placer — Partcl × Hudson River Trading Macro Placement Challenge 2026
 
-A macro placement engine built for the **Partcl x Hudson River Trading Macro Placement Challenge 2026**.
+A Spectral Graph Initialization + Simulated Annealing macro placement engine for the Partcl × HRT Macro Placement Challenge 2026**.
 
 ---
 
